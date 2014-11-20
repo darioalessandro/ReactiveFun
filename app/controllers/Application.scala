@@ -1,16 +1,11 @@
 package controllers
 
-import java.util.concurrent.{TimeoutException, Executors}
-
-import org.joda.time.{DateTimeZone, DateTime}
-import play.api._
+import java.util.concurrent.{ Executors}
 import play.api.mvc._
 import play.api.Play.current
 import play.api.libs.ws._
-import play.libs.F
 import scala.concurrent.{Promise, ExecutionContext, Future}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 
 
 object Application extends Controller {
@@ -33,7 +28,9 @@ object Application extends Controller {
 
     val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Timeout", 10 seconds)
 
-    val futures:List[Future[WSResponse]] = urls.split(',').toList map {
+    val parsedURLs=urls.split(',').toList
+
+    val futures:List[Future[WSResponse]] = parsedURLs map {
       case url:String =>
         val future=WS.url(url)
         future.get()
@@ -42,7 +39,8 @@ object Application extends Controller {
     Future.firstCompletedOf(Seq(sequence(futures), timeoutFuture)).map {
       case responses:List[WSResponse]=>
         val responsesStatus= responses map (response => response.statusText)
-        Ok(s"Responses $responsesStatus")
+        val map= (parsedURLs zip responsesStatus).toMap
+        Ok(s"Responses $map")
       case t: String => InternalServerError(t)
     } recoverWith {
       case error=>
