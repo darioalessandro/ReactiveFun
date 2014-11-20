@@ -1,3 +1,4 @@
+import controllers.Application._
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -15,16 +16,24 @@ class ApplicationSpec extends Specification {
 
   "Application" should {
 
-    "send 404 on a bad request" in new WithApplication{
-      route(FakeRequest(GET, "/boum")) must beNone
+    "throw a Missing parameter error" in new WithApplication{
+      val home = route(FakeRequest(GET, "/testMultipleRequests")).get
+
+      status(home) must equalTo(400)
+      contentType(home) must beSome.which(_ == "text/html")
+      contentAsString(home) must contain ("Missing parameter")
     }
 
-    "render the index page" in new WithApplication{
-      val home = route(FakeRequest(GET, "/")).get
+    "throw a invalid url error" in new WithApplication{
+      val home = route(FakeRequest(GET, "/testMultipleRequests?urls=http://www.gsdfsef.com")).get
+      status(home) must equalTo(400)
+      contentAsString(home) must contain ("error")
+    }
 
-      status(home) must equalTo(OK)
-      contentType(home) must beSome.which(_ == "text/html")
-      contentAsString(home) must contain ("Your new application is ready.")
+    "get all the http responses within 10 seconds" in new WithApplication{
+      val home = route(FakeRequest(GET, "/testMultipleRequests?urls=http://www.google.com,http://www.apple.com,http://www.yahoo.com")).get
+      status(home) must equalTo(200)
+      contentAsString(home) must contain ("Responses")
     }
   }
 }

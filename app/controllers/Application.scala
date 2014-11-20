@@ -29,11 +29,11 @@ object Application extends Controller {
     Ok(views.html.index("Your new application is ready."))
   }
 
-  def testMultipleRequests=Action.async {
+  def testMultipleRequests(urls:String)=Action.async {
 
     val timeoutFuture = play.api.libs.concurrent.Promise.timeout("Timeout", 10 seconds)
 
-    val futures:List[Future[WSResponse]] = List( "http://www.google.com", "http://www.chevrolet.com.mx","http://www.yahoo.com", "http://www.clinique.com", "http://www.mvsnoticias.com") map {
+    val futures:List[Future[WSResponse]] = urls.split(',').toList map {
       case url:String =>
         val future=WS.url(url)
         future.get()
@@ -47,7 +47,7 @@ object Application extends Controller {
     } recoverWith {
       case error=>
         Future {
-          Ok(s"Ya valió $error")
+          BadRequest(s"error $error")
         }
     }
 
