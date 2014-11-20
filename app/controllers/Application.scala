@@ -38,7 +38,7 @@ object Application extends Controller {
 
     Future.firstCompletedOf(Seq(sequence(futures), timeoutFuture)).map {
       case responses:List[WSResponse]=>
-        val responsesStatus= responses map (response => response.statusText)
+        val responsesStatus= responses map (response => response.body)
         val map= (parsedURLs zip responsesStatus).toMap
         Ok(s"Responses $map")
       case t: String => InternalServerError(t)
