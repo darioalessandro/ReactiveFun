@@ -32,6 +32,11 @@ object Application extends Controller {
       case url:String => WS.url(url).get
     }
 
+    futures map (future=> future.onComplete {
+      case Success(wsResponse) => println( s" ${wsResponse.header("Set-Cookie")} Completed on: ${new DateTime( DateTimeZone.UTC )}")
+      case Failure(t) => println("An error has occured: " + t.getMessage)
+    })
+
     sequence(futures) map {
       case responses:List[WSResponse]=>
         val responsesStatus= responses map (response => response.statusText)
